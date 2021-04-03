@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>检测日志</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,
+    minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="stylesheet" href="https://res.wx.qq.com/open/libs/weui/1.1.3/weui.min.css">
+  <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+  <script src="https://open.home.komect.com/jssdk/hejia-1.2.0.min.js"></script>
+  <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
+  <style>
+    .td-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      margin: 10px auto;
+      width: 50px;
+      height: 60px;
+      overflow: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="calendarArea"> </div>
+  <div id="alarmList">
+    <div class="weui-mask" id="iosMask" onclick="hideAlarmDetail()" style="display: none"></div>
+    <div class="weui-actionsheet" id="iosActionsheet">
+      <div class="weui-actionsheet__title">
+        <p class="weui-actionsheet__title-text" style="font-size: 18px;color:#000;">2月2日 异常告警</p>
+      </div>
+      <div class="weui-actionsheet__menu">
+        <div class="weui-cell" v-for="alarm,index in alarmList" v-key='index'>
+          <div class="weui-cell__bd">
+            <p>{{alarm.date}}</p>
+            <p>{{alarm.time}}</p>
+          </div>
+          <div class="weui-cell__ft" style="font-size: 0">
+            <div style="display: inline-block;vertical-align:middle; font-size: 17px;">
+              {{alarm.value?alarm.value+'μg/m³':''}}</div>
+            <div style="vertical-align:middle; font-size: 17px;">{{alarm.alarmTitle}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var mainAct = new Vue({
+      el: '#alarmList',
+      data: {
+        pmDateEnd: new Date(),
+        alarmList: [{
+          date: `2月6日`,
+          time: `22:20-23:30`,
+          alarmTitle: 'PM2.5超标',
+          value: 40
+        }, {
+          date: `2月6日`,
+          time: `22:20-23:30`,
+          alarmTitle: '电量不足'
+        }, {
+          date: `2月6日`,
+          time: `22:20-23:30`,
+          alarmTitle: 'PM2.5超标',
+          value: 40
+        }]
+      },
+      methods: {}
+    })
+    function getDays(year, month, day) {
+      var columnIndex = 1, cellIndex = 1;
+      var prevMonth = new Date(year, month - 1, 0);
+      var prevDays = [];
+      // 填充前一月的空位
+      while (prevMonth.getDay() !== 6) {
+        prevDays.unshift(prevMonth.getDate())
+        prevMonth.setDate(prevMonth.getDate() - 1)
+      }
+      prevDays.forEach(day => {
+        var cell = getCell(columnIndex, cellIndex);
+        cell.innerHTML = '<div class="td-container" style="color:rgba(0,0,0,0)">' + day + '</div>';
+        cellIndex++
+      })
+      // 当前月从1号开始
+      var nowDay = 1;
+      var nowMonth = new Date(year, month - 1, 1);
+      var lastDay = new Date(year, month - 1, day).getDate();
+      while (nowDay <= lastDay || (nowDay > lastDay && cellIndex <= 7)) {
+        if (cellIndex > 7) {
+          cellIndex = 1;
+          columnIndex++;
+        }
+        var cell = getCell(columnIndex, cellIndex);
+        if (nowDay > lastDay) { // 补当天到当周末的位置
+          cell.innerHTML = '<div class="td-container" style="color:rgba(0,0,0,0)"></div>';
+        } else {
+          if (true) { // 判断是否异常
+            cell.innerHTML = '<div class="td-container" style="color:#fff;background-color:rgb(255,93,92);" onclick="showAlarmDetail()"><div>' + nowDay + '</div><div>异常</div></div>';
+          } else {
+            cell.innerHTML = '<div class="td-container" style="background-color:rgb(244,244,244)">' + nowDay + '</div>';
+          }
+        }
+        cellIndex++;
+        nowDay++;
+        nowMonth.setDate(nowDay);
+      }
+    }
+    // 获取到td的dom
+    function getCell(column, cell) {
+      return document.querySelectorAll('#table' + calendarIdx + ' tbody tr')[column - 1].querySelectorAll('td')[cell - 1]
+    }
+    // 渲染单个月
+    const renderSingleMonth = (year, month, day) => {
+      $("#calendarArea").append('<table cellspacing=0 style="bordercolor:#C0C0C0;text-align:center;" width="100%" id="table' + calendarIdx + '">' +
+        '<thead><tr>' + month + '月</tr>' +
+        // '<tr><th>日</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th></tr>' +
+        '</thead><tbody>' +
+        '<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>' +
+        '<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>' +
+        '<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>' +
+        '<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>' +
+        '<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>' +
+        '<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>' +
+        '</tbody></tbale>');
+      let days = getDays(year, month, day);
+    }
+    // 显示告警详情
+    const showAlarmDetail = () => {
+      var $iosActionsheet = $('#iosActionsheet');
+      var $iosMask = $('#iosMask');
+
+      $iosActionsheet.addClass('weui-actionsheet_toggle');
+      $iosMask.fadeIn(200);
+    }
+    // 隐藏告警详情
+    const hideAlarmDetail = () => {
+      var $iosActionsheet = $('#iosActionsheet');
+      var $iosMask = $('#iosMask');
+
+      $iosActionsheet.removeClass('weui-actionsheet_toggle');
+      $iosMask.fadeOut(200);
+    }
+
+    let currentDate = new Date();
+    let calendarIdx = 0
+    let year = currentDate.getFullYear()
+    let month = currentDate.getMonth() + 1
+    let lastDay = currentDate.getDate()
+    renderSingleMonth(year, month, lastDay)
+    calendarIdx++;
+    month--;
+    // 上一个月的calendar
+    lastDay = new Date(year, month, 0).getDate();
+    renderSingleMonth(year, month, lastDay)
+    calendarIdx++;
+    month--;
+    // 上上个月的calendar
+    lastDay = new Date(year, month, 0).getDate();
+    renderSingleMonth(year, month, lastDay)
+    calendarIdx++;
+    month--;
+  </script>
+</body>
+
+</html>

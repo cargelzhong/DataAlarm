@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>设备设置</title>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+  <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
+  <link rel="stylesheet" href="https://res.wx.qq.com/open/libs/weui/1.1.3/weui.min.css">
+  <script type="text/javascript" src="https://res.wx.qq.com/open/libs/weuijs/1.1.4/weui.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background-color: #F5F5F5;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="weui-cells" id="detail">
+    <!-- <div class="weui-cell weui-cell_access" onclick="javascript:location.href='RangeSetting.html';"> -->
+    <div class="weui-cell weui-cell_access" @click="showIntervalPicker">
+      <div class="weui-cell__bd">
+        <span style="vertical-align: middle">pm2.5监控范围</span>
+      </div>
+      <div class="weui-cell__ft">
+        <!-- {{interval===10?interval+'分钟':interval+'小时'}} -->
+      </div>
+    </div>
+    <div class="weui-cell weui-cell_access" onclick="javascript:location.href='TimeInterval.html';">
+      <div class="weui-cell__bd">
+        <span style="vertical-align: middle">上传间隔设置</span>
+      </div>
+      <div class="weui-cell__ft"></div>
+    </div>
+    <div class="weui-cell weui-cell_access">
+      <div class="weui-cell__bd">
+        <span style="vertical-align: middle">短信告警设置</span>
+      </div>
+      <div class="weui-cell__ft"></div>
+    </div>
+  </div>
+</body>
+
+</html>

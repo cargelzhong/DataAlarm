@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>NB PM2.5检测仪</title>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="https://res.wx.qq.com/open/libs/weui/1.1.3/weui.min.css">
+  <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://open.home.komect.com/jssdk/hejia-1.2.0.min.js"></script>
+  <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
+  <script src="https://cdn.bootcss.com/echarts/4.2.1-rc1/echarts-en.min.js"></script>
+  <style>
+    .td-container {
+      margin: 0 auto;
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
+    }
+
+    .calendar-selected {
+      background: #30C0B1;
+      border-radius: 4px;
+      color: #fff;
+    }
+  </style>
+</head>
+
+<body>
+  <img src="images/bg.png" alt="" style="position:absolute;top:0;z-index:-1;width:100%;">
+  <div id="proActivite">
+    <!-- 上部卡片 -->
+    <div class="card">
+      <div class="flex-row" style="width:100%;justify-content:space-between;">
+        <div>PM2.5污染浓度值</div>
+        <div style="color:#999;">
+          <span>上次更新时间：{{deviceInfo.time | timestamp2hhmm}}</span>
+          <div class='battery' style="display: inline-block">
+            <div class="flex-row" style="width:20px;height:100%;background-color:#fff;">
+              <div v-for="(item,index) in deviceInfo.power" :key="index" class="power-block"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex-row" style="margin:10px 0;width:100%;align-items: flex-start;justify-content: space-between;">
+        <div class="flex-row" style="align-items: flex-start;">
+          <span style="font-size:2em;line-height: 1.4;">{{deviceInfo.lastV0}}</span><span>μg/m³</span>
+          <div @click="location.href='html/DeviceSetting.html'"
+            style="display:inline-block;margin:0 6px;color:#fff;width:60px;background-image: linear-gradient(to right,#69E6F4, #2FD7C6);border-radius:4px;text-align:center;font-size:1em;">
+            {{deviceInfo.lastV0 | pollutionLevel}}</div>
+        </div>
+        <div style="color:#30C0B1" @click="showDialog">PM2.5介绍</div>
+      </div>
+      <img style="width:100%" src="images/pm.png" alt="">
+    </div>
+    <!-- PM2.5介绍弹窗 -->
+    <div class="js_dialog" id="introduction" style="display: none;">
+      <div class="weui-mask" @click="hideDialog"></div>
+      <div class="weui-dialog">
+        <div class="weui-dialog__hd"><strong class="weui-dialog__title">PM 2.5颗粒物介绍</strong></div>
+        <div class="weui-dialog__bd" style="text-align: left;color:#242424">细颗粒物指环境空气中空气动力学当量直径小于等于 2.5
+          微米的颗粒物。它能较长时间悬浮于空气中，其在空气中含量浓度越高，就代表空气污染越严重。虽然PM2.5只是地球大气成分中含量很少的组分，但它对空气质量和能见度等有重要的影响。与较粗的大气颗粒物相比，PM2.5粒径小，面积大，活性强，易附带有毒、有害物质（例如，重金属、微生物等），且在大气中的停留时间长、输送距离远，因而对人体健康和大气环境质量的影响更大。
+        </div>
+      </div>
+    </div>
+    <div style="margin: 10px 4vw;border-radius: 10px;background: #fff;">
+      <!-- 日期选择 -->
+      <div class="flex-row" style="padding:10px 0 0;width:60%;margin:10px auto;justify-content: space-around;">
+        <i class="left" @click='pmPrevPeriod'></i>
+        <p @click="showActionSheet">{{pmDateEnd | date2YYYYMMDD}} </p>
+        <i class="right" @click='pmNextPeriod'></i>
+      </div>
+      <!-- 折线图 -->
+      <div id='pm' class='chart'></div>
+    </div>
+    <!-- 告警列表 -->
+    <div class="weui-cells weui-cells_after-title item" style="color:#242424">
+      <div class="weui-cell">
+        <div class="weui-cell__bd">告警列表</div>
+        <div class="weui-cell__ft" style="color:#30C0B1;border:1px solid #30C0B1;padding:2px 6px;border-radius: 4px; " @click="location.href='html/AlarmLog.html'">告警日志</div>
+      </div>
+      <div class="weui-cell" v-for="alarm,index in alarmList" v-key='index'>
+        <div class="weui-cell__bd">
+          <p>{{alarm.date}}</p>
+          <p>{{alarm.time}}</p>
+        </div>
+        <div class="weui-cell__ft" style="font-size: 0">
+          <div style="display: inline-block;vertical-align:middle; font-size: 17px;">
+            {{alarm.value?alarm.value+'μg/m³':''}}</div>
+          <div style="vertical-align:middle; font-size: 17px;">{{alarm.alarmTitle}}</div>
+        </div>
+      </div>
+    </div>
+    <!-- 日历actionsheet -->
+    <div id="selectDate">
+      <div class="weui-mask" id="iosMask" @click="hideActionSheet()" style="display: none"></div>
+      <div class="weui-actionsheet" id="iosActionsheet">
+        <div class="weui-actionsheet__title" style="flex-direction: row;align-items:center;font-size:16px;">
+          <div style="display:inline-block;color:#30C0B1;" @click="hideActionSheet()">取消</div>
+          <div class="flex-row" style="width:60%;margin:10px auto;justify-content: space-around;">
+            <i class="left" @click='prevMonth'></i>
+            <p>{{ calendarDate | dateFilter }} </p>
+            <i class="right" @click='nextMonth'></i>
+          </div>
+          <div style="color: #30C0B1;" @click='confirmDate'>确定</div>
+        </div>
+        <div class="weui-actionsheet__menu" id="calendarArea" style="height:200px;">
+          <table cellspacing=0 style="border:#C0C0C0;text-align:center;" width="100%" id="table">
+            <thead>
+              <tr>
+                <th>日</th>
+                <th>一</th>
+                <th>二</th>
+                <th>三</th>
+                <th>四</th>
+                <th>五</th>
+                <th>六</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+            </tbody>
+            </tbale>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="javascript/main.js"></script>
+</body>
+
+</html>

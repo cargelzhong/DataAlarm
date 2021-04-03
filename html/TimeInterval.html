@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>上传时间间隔</title>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+  <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
+  <link rel="stylesheet" href="https://res.wx.qq.com/open/libs/weui/1.1.3/weui.min.css">
+  <script type="text/javascript" src="https://res.wx.qq.com/open/libs/weuijs/1.1.4/weui.min.js"></script>
+</head>
+
+<body>
+  <div class="weui-cells" id="detail">
+    <div class="weui-cell weui-cell_access" @click="showIntervalPicker">
+      <div class="weui-cell__bd">
+        <span style="vertical-align: middle">时间间隔</span>
+      </div>
+      <div class="weui-cell__ft">{{interval===10?interval+'分钟':interval+'小时'}}</div>
+    </div>
+    <div class="weui-cell weui-cell_access" @click="showStartTimePicker">
+      <div class="weui-cell__bd">
+        <span style="vertical-align: middle">时间点设置</span>
+      </div>
+      <div class="weui-cell__ft">{{startTime}}</div>
+    </div>
+  </div>
+</body>
+<script>
+  var mainAct = new Vue({
+    el: '#detail',
+    data: {
+      interval: 24,
+      startTime: '00:00',
+      isDialog: false,
+      dialogTitle: "确认布防？",
+      itemSet: [],
+      alarmType: ' ', // 警情类型 
+      alarmOn: '打开状态',
+      alarmOff: '闭合状态',
+      isOnline: false,
+      isProtection: false,
+      isAlarm: false,
+      batteryLow: false,
+      isDismantle: false,
+      dateTime: '',
+      eventState: '',
+      inputConnent: '',
+      deviceState: '设备已离线',
+      divBackground: '',
+      imgButtonImg: 'image/xhdpi/hardwork_icon_security_close.png',
+    },
+    methods: {
+      moreEven: function () {
+        devicename = "ffff"
+        location.href = 'html/DeviceDetails.html';
+      },
+      showIntervalPicker() {
+        weui.picker([{
+          label: '24小时',
+          value: 24
+        }, {
+          label: '12小时',
+          value: 12
+        }, {
+          label: '6小时',
+          value: 6
+        }, {
+          label: '3小时',
+          disabled: true,
+          value: 3
+        }, {
+          label: '1小时',
+          value: 1
+        }, {
+          label: '10分钟',
+          value: 10
+        }], {
+            onChange: function (result) {
+              console.log(result);
+            },
+            onConfirm: function (result) {
+              console.warn(result[0].value);
+              mainAct.interval = result[0].value
+            }
+          });
+      },
+      showStartTimePicker() {
+        weui.picker(
+          [{ label: '00', value: '00' },
+          { label: '01', value: '01' },
+          { label: '02', value: '02' },
+          { label: '03', value: '03' },
+          { label: '04', value: '04' },
+          { label: '05', value: '05' },
+          { label: '06', value: '06' },
+          { label: '07', value: '07' },
+          { label: '08', value: '08' },
+          { label: '09', value: '09' },
+          { label: '10', value: '10' },
+          { label: '11', value: '11' },
+          { label: '12', value: '12' },
+          { label: '13', value: '13' },
+          { label: '14', value: '14' },
+          { label: '15', value: '15' },
+          { label: '16', value: '16' },
+          { label: '17', value: '17' },
+          { label: '18', value: '18' },
+          { label: '19', value: '19' },
+          { label: '20', value: '20' },
+          { label: '21', value: '21' },
+          { label: '22', value: '22' },
+          { label: '23', value: '23' }],
+
+          [{ label: '00', value: '00' },
+          { label: '10', value: '10' },
+          { label: '20', value: '20' },
+          { label: '30', value: '30' },
+          { label: '40', value: '40' },
+          { label: '50', value: '50' }],
+          {
+            defaultValue: ['00', '00'],
+            onChange: function (result) {
+              console.log(result);
+            },
+            onConfirm: function (result) {
+              mainAct.startTime = result[0].value + ':' + result[1].value
+              console.log('设置成功');
+            },
+            id: 'multiPickerBtn'
+          });
+      }
+    }
+  })
+</script>
+
+</html>
